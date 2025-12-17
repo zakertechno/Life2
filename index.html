@@ -3399,6 +3399,22 @@
                 company: false,
                 forceHousing: false
             },
+
+            // ANNUAL INCOME TRACKING FOR TAXES
+            currentYearIncome: {
+                salary: 0,
+                rental: 0,
+                stocks: 0,
+                company: 0
+            },
+            previousYearIncome: {
+                salary: 0,
+                rental: 0,
+                stocks: 0,
+                company: 0
+            },
+            taxWarningShown: false,
+
             // Job Persistence
             currentCareerPath: 'none',
             monthsInCurrentJob: 0,
@@ -3708,13 +3724,25 @@
                 let pItem = GameState.inventory.stocks.find(s => s.symbol === symbol);
                 if (!pItem || pItem.quantity < qty) return { success: false, message: 'No tienes suficientes acciones' };
 
-                const value = stock.price * qty;
-                GameState.cash += value;
+                const saleValue = stock.price * qty;
+                const purchaseCost = pItem.avgPrice * qty;
+                const profit = saleValue - purchaseCost;
+
+                GameState.cash += saleValue;
+
+                // TRACK STOCK GAINS FOR TAXES (only if profit)
+                if (profit > 0) {
+                    if (!GameState.currentYearIncome) {
+                        GameState.currentYearIncome = { salary: 0, rental: 0, stocks: 0, company: 0 };
+                    }
+                    GameState.currentYearIncome.stocks += profit;
+                }
+
                 pItem.quantity -= qty;
                 if (pItem.quantity <= 0) {
                     GameState.inventory.stocks = GameState.inventory.stocks.filter(s => s.symbol !== symbol);
                 }
-                return { success: true, message: `Vendidas ${qty} acciones de ${symbol} por ${formatCurrency(value)}` };
+                return { success: true, message: `Vendidas ${qty} acciones de ${symbol} por ${formatCurrency(saleValue)}` };
             }
         };
 
@@ -3747,10 +3775,23 @@
                 const existing = gameState.inventory.stocks.find(s => s.symbol === stockSymbol);
                 if (existing && existing.quantity >= quantity) {
                     const stock = StockMarket.getStock(stockSymbol);
-                    const value = stock.price * quantity;
-                    const commission = value * 0.005;
-                    const totalReturn = value - commission;
+                    const saleValue = stock.price * quantity;
+                    const purchaseCost = existing.avgPrice * quantity;
+                    const profit = saleValue - purchaseCost;
+                    const commission = saleValue * 0.005;
+                    const totalReturn = saleValue - commission;
+
                     gameState.cash += totalReturn;
+
+                    // TRACK STOCK GAINS FOR TAXES (only if profit, after commission)
+                    const netProfit = profit - commission;
+                    if (netProfit > 0) {
+                        if (!GameState.currentYearIncome) {
+                            GameState.currentYearIncome = { salary: 0, rental: 0, stocks: 0, company: 0 };
+                        }
+                        GameState.currentYearIncome.stocks += netProfit;
+                    }
+
                     existing.quantity -= quantity;
                     if (existing.quantity === 0) {
                         gameState.inventory.stocks = gameState.inventory.stocks.filter(s => s.symbol !== stockSymbol);
@@ -4506,6 +4547,12 @@
                         this.processCompany(co, false);
                         if (co.profitLastMonth > 0) {
                             GameState.cash += co.profitLastMonth;
+
+                            // TRACK COMPANY PROFITS FOR TAXES
+                            if (!GameState.currentYearIncome) {
+                                GameState.currentYearIncome = { salary: 0, rental: 0, stocks: 0, company: 0 };
+                            }
+                            GameState.currentYearIncome.company += co.profitLastMonth;
                         }
                     });
                 }
@@ -8252,13 +8299,107 @@
             const netIncome = GameState.salary + rentIncome - GameState.expenses;
             GameState.cash += netIncome;
 
+            // TRACK ANNUAL INCOME FOR TAXES
+            if (!GameState.currentYearIncome) {
+                GameState.currentYearIncome = { salary: 0, rental: 0, stocks: 0, company: 0 };
+            }
+            if (GameState.salary > 0) GameState.currentYearIncome.salary += GameState.salary;
+            if (rentIncome > 0) GameState.currentYearIncome.rental += rentIncome;
+            // Stock gains are tracked when selling
+            // Company profits are tracked in CompanyModule.nextTurn
+
+            // COMMUNIST EXPROPRIATION: If player has too much money, confiscate 50%
+            if (GameState.cash >= 500000) {
+                const expropriatedAmount = Math.floor(GameState.cash * 0.5);
+                GameState.cash -= expropriatedAmount;
+
+                setTimeout(() => {
+                    UI.showModal(
+                        '☭ Expropiación del Estado',
+                        `Lamentablemente en el juego de Sergio gobierna el <strong>comunismo</strong>... y piensa que tienes demasiado dinero.<br><br>El estado ha decidido <strong>expropiarte el 50%</strong> de tu dinero (${formatCurrency(expropriatedAmount)}) para gastárselo en... bueno, que somos el estado no tenemos que darte explicaciones.`,
+                        [{ text: '😢 Entendido', style: 'danger', fn: null }]
+                    );
+                }, 500);
+            }
+
             JobSystem.nextTurn(); // Run here to handle job expiry AFTER pay
+
+            // TAX SYSTEM
+            // Warning in Month 1, Year 4
+            if (GameState.year === 4 && GameState.month === 1 && !GameState.taxWarningShown) {
+                GameState.taxWarningShown = true;
+                setTimeout(() => {
+                    UI.showModal(
+                        '📋 Aviso Importante: Impuestos',
+                        `Esto es un <strong>simulador real</strong>... toca pagar impuestos al Estado de Sergio.<br><br>A partir de ahora, el <strong>mes 5 de cada año</strong> deberás presentar la <strong>Declaración de la Renta</strong>.<br><br>📊 <strong>Impuestos progresivos:</strong><br>- Menos de 10.000€: 10%<br>- 10.000-25.000€: 15%<br>- 25.000-50.000€: 25%<br>- 50.000-100.000€: 35%<br>- Más de 100.000€: 45%<br><br>💡 <em>Consejo: Reserva dinero para cuando llegue el momento.</em>`,
+                        [{ text: 'Entendido 😰', style: 'primary', fn: null }]
+                    );
+                }, 800);
+            }
+
+            // Tax Declaration in Month 5 (starting year 4)
+            if (GameState.year >= 4 && GameState.month === 5) {
+                if (!GameState.previousYearIncome) {
+                    GameState.previousYearIncome = { salary: 0, rental: 0, stocks: 0, company: 0 };
+                }
+
+                const totalIncome =
+                    GameState.previousYearIncome.salary +
+                    GameState.previousYearIncome.rental +
+                    GameState.previousYearIncome.stocks +
+                    GameState.previousYearIncome.company;
+
+                // PROGRESSIVE TAX SYSTEM
+                function calculateTaxRate(income) {
+                    if (income < 10000) return 0.10;
+                    if (income < 25000) return 0.15;
+                    if (income < 50000) return 0.25;
+                    if (income < 100000) return 0.35;
+                    return 0.45; // 100k or more
+                }
+
+                const taxRate = calculateTaxRate(totalIncome);
+                const taxAmount = Math.floor(totalIncome * taxRate);
+
+                if (totalIncome > 0) {
+                    GameState.cash -= taxAmount;
+
+                    setTimeout(() => {
+                        const breakdown = `
+                            <div style="text-align: left; margin: 20px 0;">
+                                <h4 style="margin-bottom: 15px; color: #38bdf8;">Ingresos Año ${GameState.year - 1}:</h4>
+                                <div style="margin-bottom: 8px;">💼 Salarios: <strong>${formatCurrency(GameState.previousYearIncome.salary)}</strong></div>
+                                <div style="margin-bottom: 8px;">🏠 Alquileres: <strong>${formatCurrency(GameState.previousYearIncome.rental)}</strong></div>
+                                <div style="margin-bottom: 8px;">📈 Ganancias Bolsa: <strong>${formatCurrency(GameState.previousYearIncome.stocks)}</strong></div>
+                                <div style="margin-bottom: 8px;">🏢 Beneficios Empresa: <strong>${formatCurrency(GameState.previousYearIncome.company)}</strong></div>
+                                <hr style="margin: 15px 0; border-color: #334155;">
+                                <div style="font-size: 1.1rem; margin-bottom: 10px;">Total Ingresos: <strong style="color: #4ade80;">${formatCurrency(totalIncome)}</strong></div>
+                                <div style="font-size: 0.9rem; margin-bottom: 8px; color: #94a3b8;">Tramo Impositivo: ${(taxRate * 100).toFixed(0)}%</div>
+                                <div style="font-size: 1.2rem; margin-top: 15px; color: #f87171;">Impuestos: <strong>${formatCurrency(taxAmount)}</strong></div>
+                            </div>
+                        `;
+
+                        UI.showModal(
+                            '📋 Declaración de la Renta ' + (GameState.year - 1),
+                            breakdown + '<br>El importe ha sido deducido de tu cuenta.',
+                            [{ text: 'Pagar Impuestos 💸', style: 'danger', fn: null }]
+                        );
+                    }, 1000);
+                }
+            }
 
             GameState.month++;
             if (GameState.month > 12) {
                 GameState.month = 1;
                 GameState.year++;
                 GameState.age++; // Birthday!
+
+                // RESET ANNUAL INCOME TRACKING
+                if (!GameState.previousYearIncome) {
+                    GameState.previousYearIncome = { salary: 0, rental: 0, stocks: 0, company: 0 };
+                }
+                GameState.previousYearIncome = { ...GameState.currentYearIncome };
+                GameState.currentYearIncome = { salary: 0, rental: 0, stocks: 0, company: 0 };
             }
 
             UI.checkStoryEvents(); // CHECK EVENTS
