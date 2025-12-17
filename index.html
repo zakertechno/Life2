@@ -3415,6 +3415,11 @@
             },
             taxWarningShown: false,
 
+            // EXPROPRIATION TRACKING
+            expropriation500kDone: false,
+            expropriation1MDone: false,
+            expropriation3MDone: false,
+
             // Job Persistence
             currentCareerPath: 'none',
             monthsInCurrentJob: 0,
@@ -8349,15 +8354,54 @@
             // Stock gains are tracked when selling
             // Company profits are tracked in CompanyModule.nextTurn
 
-            // COMMUNIST EXPROPRIATION: If player has too much money, confiscate 50%
-            if (GameState.cash >= 500000) {
-                const expropriatedAmount = Math.floor(GameState.cash * 0.5);
-                GameState.cash -= expropriatedAmount;
+            // PROGRESSIVE COMMUNIST EXPROPRIATION SYSTEM
+            let expropriationTriggered = false;
+            let expropriationAmount = 0;
+            let expropriationPercent = 0;
+            let expropriationMessage = '';
 
+            // Tier 4: 6 Million or more - 90% (RECURRING)
+            if (GameState.cash >= 6000000) {
+                expropriationPercent = 0.90;
+                expropriationAmount = Math.floor(GameState.cash * expropriationPercent);
+                GameState.cash -= expropriationAmount;
+                expropriationTriggered = true;
+                expropriationMessage = `¡ATENCIÓN CIUDADANO!<br><br>El Comité Central ha detectado que posees una cantidad <strong>obscena</strong> de capital (${formatCurrency(GameState.cash + expropriationAmount)}).<br><br>En nombre de la <strong>igualdad social</strong>, procedemos a <strong>redistribuir el 90%</strong> (${formatCurrency(expropriationAmount)}) entre... ehh... proyectos del partido.<br><br>🚩 ¡Viva la revolución!`;
+            }
+            // Tier 3: 3 Million - 70% (ONCE)
+            else if (GameState.cash >= 3000000 && !GameState.expropriation3MDone) {
+                expropriationPercent = 0.70;
+                expropriationAmount = Math.floor(GameState.cash * expropriationPercent);
+                GameState.cash -= expropriationAmount;
+                GameState.expropriation3MDone = true;
+                expropriationTriggered = true;
+                expropriationMessage = `Estimado "camarada"...<br><br>Hemos notado que tu cuenta bancaria parece la de un <strong>burgués capitalista</strong>. Esto no puede ser.<br><br>El Estado de Sergio ha aprobado una <strong>"contribución solidaria obligatoria"</strong> del 70% (${formatCurrency(expropriationAmount)}).<br><br>Tranquilo, lo usaremos para... cosas. Importantes. Probablemente.`;
+            }
+            // Tier 2: 1 Million - 60% (ONCE)
+            else if (GameState.cash >= 1000000 && !GameState.expropriation1MDone) {
+                expropriationPercent = 0.60;
+                expropriationAmount = Math.floor(GameState.cash * expropriationPercent);
+                GameState.cash -= expropriationAmount;
+                GameState.expropriation1MDone = true;
+                expropriationTriggered = true;
+                expropriationMessage = `¡Felicidades! Has alcanzado el <strong>millón de euros</strong>.<br><br>Lástima que en el Estado de Sergio eso sea considerado <strong>"riqueza indecente"</strong>.<br><br>Se te aplicará un <strong>"ajuste patrimonial"</strong> del 60% (${formatCurrency(expropriationAmount)}) para financiar... ehh... la nueva estatua de Sergio. Es muy grande.`;
+            }
+            // Tier 1: 500k - 50% (ONCE)
+            else if (GameState.cash >= 500000 && !GameState.expropriation500kDone) {
+                expropriationPercent = 0.50;
+                expropriationAmount = Math.floor(GameState.cash * expropriationPercent);
+                GameState.cash -= expropriationAmount;
+                GameState.expropriation500kDone = true;
+                expropriationTriggered = true;
+                expropriationMessage = `Lamentablemente en el juego de Sergio gobierna el <strong>comunismo</strong>... y piensa que tienes demasiado dinero.<br><br>El estado ha decidido <strong>expropiarte el 50%</strong> de tu dinero (${formatCurrency(expropriationAmount)}) para gastárselo en... bueno, que somos el estado no tenemos que darte explicaciones.`;
+            }
+
+            // Show expropriation modal if triggered
+            if (expropriationTriggered) {
                 setTimeout(() => {
                     UI.showModal(
                         '☭ Expropiación del Estado',
-                        `Lamentablemente en el juego de Sergio gobierna el <strong>comunismo</strong>... y piensa que tienes demasiado dinero.<br><br>El estado ha decidido <strong>expropiarte el 50%</strong> de tu dinero (${formatCurrency(expropriatedAmount)}) para gastárselo en... bueno, que somos el estado no tenemos que darte explicaciones.`,
+                        expropriationMessage,
                         [{ text: '😢 Entendido', style: 'danger', fn: null }]
                     );
                 }, 500);
