@@ -7418,14 +7418,28 @@
                         const isMaxLevel = (currentJobIndex !== -1 && currentJobIndex === path.length - 1);
 
                         if (JobSys.currentCareerPath === 'none' || !path) {
-                            // --- UNEMPLOYED CASE ---
+                            // --- UNEMPLOYED OR TEMPORARY JOB CASE ---
                             const goalCard = document.createElement('div');
                             goalCard.className = 'dashboard-card goal-card';
-                            goalCard.innerHTML = `
-                            <div class="card-header"><span class="badge-secondary">BUSCA TRABAJO</span></div>
-                            <h3 class="goal-title">Estás Desempleado</h3>
-                            <p style="color:#94a3b8; margin-top:10px;">Revisa las ofertas de abajo y aplica a un puesto para empezar a ganar dinero.</p>
-                        `;
+
+                            // Check if has temporary jobs (gigs) - must have both gigs and salary
+                            const hasGigs = GameState.currentGigs && GameState.currentGigs.length > 0 && GameState.salary > 0;
+
+                            if (hasGigs) {
+                                // Temporary job message
+                                goalCard.innerHTML = `
+                                <div class="card-header"><span class="badge-secondary">TRABAJO TEMPORAL</span></div>
+                                <h3 class="goal-title">Trabajo Temporal</h3>
+                                <p style="color:#94a3b8; margin-top:10px;">Esto es un trabajo temporal, no durará mucho.</p>
+                            `;
+                            } else {
+                                // Unemployed message
+                                goalCard.innerHTML = `
+                                <div class="card-header"><span class="badge-secondary">BUSCA TRABAJO</span></div>
+                                <h3 class="goal-title">Estás Desempleado</h3>
+                                <p style="color:#94a3b8; margin-top:10px;">Revisa las ofertas de abajo y aplica a un puesto para empezar a ganar dinero.</p>
+                            `;
+                            }
                             dashboardGrid.appendChild(goalCard);
 
                         } else if (!isMaxLevel) {
@@ -7445,29 +7459,24 @@
                                 <div class="progress-section" style="margin-top:15px;">
                                     <div class="progress-label">
                                         <span>Tiempo desde última petición</span>
-                                        <span>${monthsSinceLastRequest.toFixed(1)} / 2 meses</span>
+                                        <span>${monthsSinceLastRequest} / 2 meses</span>
                                     </div>
-                                    <div class="progress-track">
-                                        <div class="progress-fill" style="width: ${Math.min(100, (monthsSinceLastRequest / 2) * 100)}%"></div>
-                                    </div>
+                                    <div class="edu-bar-bg"><div class="edu-bar-fill" style="width:${Math.min(100, (monthsSinceLastRequest / 2) * 100)}%"></div></div>
                                 </div>
-                                
-                                ${!canAsk ? `<p style="color:#f87171; margin-top:15px; font-size:0.9rem;">⏱️ Podrás pedir aumento en ${monthsRemaining.toFixed(1)} mes(es)</p>` : ''}
-                                
-                                <button class="btn-promote" ${!canAsk ? 'disabled' : ''} style="margin-top:15px; width:100%; padding:12px; background:${canAsk ? 'var(--success-color)' : '#334155'}; color:white; border:none; border-radius:8px; font-weight:bold; cursor:${canAsk ? 'pointer' : 'not-allowed'};">
-                                    ${canAsk ? '💰 Pedir Aumento' : '🔒 Aún no disponible'}
+
+                                <button id="btn-raise-tres" class="btn-primary" style="margin-top:15px;" ${canAsk ? '' : 'disabled'}>
+                                    ${canAsk ? 'Pedir Aumento' : `Esperar ${monthsRemaining} mes(es)`}
                                 </button>
                             `;
-
-                                const promoteBtn = goalCard.querySelector('.btn-promote');
                                 if (canAsk) {
-                                    promoteBtn.onclick = () => {
+                                    goalCard.querySelector('#btn-raise-tres').onclick = () => {
                                         const res = JobSys.promote();
-                                        alert(res.message);
+                                        if (!res.success) {
+                                            alert(res.message);
+                                        }
                                         UI.updateJob(JobSys);
                                     };
                                 }
-
                                 dashboardGrid.appendChild(goalCard);
                             }
                             // --- NORMAL PROMOTION CASE ---
