@@ -3347,7 +3347,7 @@
     <script>
         console.log("CRITICAL DEBUG: SCRIPT STARTED");
         /*******************************************************
-         * ENDGAME SYSTEM (YEAR 10)
+         * ENDGAME SYSTEM (YEAR 50)
          *******************************************************/
         function showEndgameModal() {
             const stats = GameState.lifetimeStats;
@@ -3363,7 +3363,7 @@
             const summary = `
                 <div style="text-align: center; padding: 15px; max-height: 75vh; overflow-y: auto;">
                     <div style="font-size: 2.5rem; margin-bottom: 5px;">☠️</div>
-                    <h2 style="color: #f87171; margin: 0 0 3px 0; font-size: 1.4rem;">Has Muerto - Año 20</h2>
+                    <h2 style="color: #f87171; margin: 0 0 3px 0; font-size: 1.4rem;">Has Muerto - Año 50</h2>
                     <p style="color: #4ade80; margin: 5px 0; font-size: 1rem; font-weight: 600;">
                         Has llegado a tener un patrimonio de ${formatCurrency(GameState.netWorth)}
                     </p>
@@ -8781,8 +8781,8 @@
                 GameState.year++;
                 GameState.age++; // Birthday!
 
-                // CHECK FOR YEAR 20 ENDGAME
-                if (GameState.year > 20) {
+                // CHECK FOR YEAR 50 ENDGAME
+                if (GameState.year > 50) {
                     setTimeout(() => showEndgameModal(), 500);
                     return; // Stop game progression
                 }
