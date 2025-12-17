@@ -4859,6 +4859,11 @@
                     { title: 'Supervisor de Planta', salary: 1400, reqMonths: 24, reqEdu: null }
                 ],
 
+                // --- TRES DEPORTE (Sin ascensos) ---
+                'tres_deporte': [
+                    { title: 'TRES DEPORTE', salary: 850, reqMonths: 0, reqEdu: 'bachillerato' }
+                ],
+
                 // --- FP ADMINISTRACION ---
                 'admin_contable': [
                     { title: 'Administrativo contable', salary: 1300, reqMonths: 0, reqEdu: 'fp_admin' },
@@ -5011,8 +5016,8 @@
                 }
 
                 if (!GameState.isStudying) {
-                    this.monthsInCurrentJob++;
-                    this.monthsSinceLastRaise++;
+                    this.monthsInCurrentJob += 1;
+                    this.monthsSinceLastRaise = (this.monthsSinceLastRaise || 0) + 1; // Track for TRES DEPORTE salary requests
                 } else {
                     this.monthsInCurrentJob += 0.5;
                     this.monthsSinceLastRaise += 0.5;
@@ -5041,6 +5046,59 @@
             },
 
             promote() {
+                // SPECIAL CASE: TRES DEPORTE - No promotions, but can ask for raise every 2 months
+                if (GameState.jobTitle === 'TRES DEPORTE') {
+                    const monthsSinceLastRequest = this.monthsSinceLastRaise || 0;
+
+                    if (monthsSinceLastRequest < 2) {
+                        return {
+                            success: false,
+                            message: `Tu jefa te ignora. Espera ${2 - monthsSinceLastRequest} mes(es) más para volver a intentarlo.`
+                        };
+                    }
+
+                    // Reset counter
+                    this.monthsSinceLastRaise = 0;
+
+                    // Array of comic excuses
+                    const excuses = [
+                        "Tu jefa dice que... primero tendrías que vender más mochilas. Por cierto, ¿puedes trabajar el sábado?",
+                        "Tu jefa dice que... arréglate esa barba. Pareces un vagabundo, no un empleado.",
+                        "Tu jefa dice que... si quieres más dinero, vende tu riñón. Por cierto, ¿puedes trabajar el domingo?",
+                        "Tu jefa dice que... ¿aumento? ¡Pero si ya tienes un trabajo!",
+                        "Tu jefa dice que... la empresa está en crisis mientras ella se va de crucero.",
+                        "Tu jefa dice que... el año que viene seguro, confía en mí. Por cierto, ¿puedes trabajar el sábado?",
+                        "Tu jefa dice que... ¿has probado buscar monedas en la calle?",
+                        "Tu jefa dice que... con tu rendimiento deberías PAGAR por trabajar aquí. ¿Y ese día que te pusiste malo? Eso nos costó dinero.",
+                        "Tu jefa dice que... primero aprende a llegar puntual.",
+                        "Tu jefa dice que... ¿aumento? ¡Qué gracioso eres! Por cierto, ¿puedes trabajar el domingo?",
+                        "Tu jefa dice que... yo te lo daría, pero los de arriba no me dejan. Ya sabes cómo son.",
+                        "Tu jefa dice que... estás ganando experiencia, ¿no te basta? Y esas vacaciones que pediste en verano, ¿te parecen poco?",
+                        "Tu jefa dice que... te pagaremos en exposición y buen rollo.",
+                        "Tu jefa dice que... ya puedes entrenar sin pagar en el gimnasio, ¿qué más quieres?",
+                        "Tu jefa dice que... si tanto lo necesitas, vende cosas en Wallapop. Por cierto, ¿puedes trabajar el sábado?",
+                        "Tu jefa dice que... el café gratis es tu aumento.",
+                        "Tu jefa dice que... ¿aumento? No veo que vendas más que Pedro. Y encima te pones malo cada dos por tres.",
+                        "Tu jefa dice que... estamos esperando a que la economía mejore. Por cierto, ¿puedes trabajar el domingo?",
+                        "Tu jefa dice que... con 850€ vives como un rey en 1985.",
+                        "Tu jefa dice que... primero demuestra que mereces lo que ya ganas. ¿Y ese día de baja el mes pasado?",
+                        "Tu jefa dice que... agradece que no te hemos bajado el sueldo.",
+                        "Tu jefa dice que... ¿sabes cuánta gente querría tu puesto? Y tú cogiendo vacaciones...",
+                        "Tu jefa dice que... el trabajo en equipo no se paga, se siente. Por cierto, ¿puedes trabajar el sábado?",
+                        "Tu jefa dice que... hemos decidido invertir en un nuevo logo en vez de salarios. Ah, y necesitamos que vengas el domingo.",
+                        "Tu jefa dice que... ¿otra vez con lo mismo? La semana pasada te fuiste 'malo' y ahora quieres aumento.",
+                        "Tu jefa dice que... las vacaciones son un privilegio, no un derecho. Y menos si quieres más dinero.",
+                        "Tu jefa dice que... llevas mal puesto el uniforme. Así no puedo subirte el sueldo.",
+                        "Tu jefa dice que... ¿con esos pendientes? Primero quítatelos y luego hablamos de dinero.",
+                        "Tu jefa dice que... ese peinado no es adecuado para la empresa. Arréglate primero.",
+                        "Tu jefa dice que... el uniforme tiene que estar impecable. Ven mañana bien vestido y lo hablamos."
+                    ];
+
+                    const randomExcuse = excuses[Math.floor(Math.random() * excuses.length)];
+                    return { success: false, message: randomExcuse };
+                }
+
+                // NORMAL PROMOTION LOGIC
                 const nextJob = this.getAvailablePromotions();
                 if (!nextJob) return { success: false, message: 'No hay ascensos disponibles.' };
 
@@ -7291,20 +7349,62 @@
                             dashboardGrid.appendChild(goalCard);
 
                         } else if (!isMaxLevel) {
-                            // --- PROMOTION CASE ---
-                            const nextJobInPath = path[currentJobIndex + 1];
-                            const canPromote = JobSys.getAvailablePromotions() !== null;
+                            // --- SPECIAL CASE: TRES DEPORTE ---
+                            if (GameState.jobTitle === 'TRES DEPORTE') {
+                                const monthsSinceLastRequest = JobSys.monthsSinceLastRaise || 0;
+                                const canAsk = monthsSinceLastRequest >= 2;
+                                const monthsRemaining = Math.max(0, 2 - monthsSinceLastRequest);
 
-                            const reqMonths = nextJobInPath.reqMonths;
-                            const currentMonths = JobSys.monthsInCurrentJob;
-                            const progress = Math.min(100, (currentMonths / reqMonths) * 100);
+                                const goalCard = document.createElement('div');
+                                goalCard.className = 'dashboard-card goal-card';
+                                goalCard.innerHTML = `
+                                <div class="card-header"><span class="badge-warning">PEDIR AUMENTO</span></div>
+                                <h3 class="goal-title">Solicitar Aumento de Salario</h3>
+                                <p style="color:#94a3b8; margin:10px 0;">En TRES DEPORTE no hay ascensos, pero puedes pedir aumento cada 2 meses.</p>
+                                
+                                <div class="progress-section" style="margin-top:15px;">
+                                    <div class="progress-label">
+                                        <span>Tiempo desde última petición</span>
+                                        <span>${monthsSinceLastRequest.toFixed(1)} / 2 meses</span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: ${Math.min(100, (monthsSinceLastRequest / 2) * 100)}%"></div>
+                                    </div>
+                                </div>
+                                
+                                ${!canAsk ? `<p style="color:#f87171; margin-top:15px; font-size:0.9rem;">⏱️ Podrás pedir aumento en ${monthsRemaining.toFixed(1)} mes(es)</p>` : ''}
+                                
+                                <button class="btn-promote" ${!canAsk ? 'disabled' : ''} style="margin-top:15px; width:100%; padding:12px; background:${canAsk ? 'var(--success-color)' : '#334155'}; color:white; border:none; border-radius:8px; font-weight:bold; cursor:${canAsk ? 'pointer' : 'not-allowed'};">
+                                    ${canAsk ? '💰 Pedir Aumento' : '🔒 Aún no disponible'}
+                                </button>
+                            `;
 
-                            const isEduOk = !nextJobInPath.reqEdu || JobSys.checkEducation(nextJobInPath.reqEdu);
-                            const isTimeOk = currentMonths >= reqMonths;
+                                const promoteBtn = goalCard.querySelector('.btn-promote');
+                                if (canAsk) {
+                                    promoteBtn.onclick = () => {
+                                        const res = JobSys.promote();
+                                        alert(res.message);
+                                        UI.updateJob(JobSys);
+                                    };
+                                }
 
-                            const nextCard = document.createElement('div');
-                            nextCard.className = 'job-promo-card';
-                            nextCard.innerHTML = `
+                                dashboardGrid.appendChild(goalCard);
+                            }
+                            // --- NORMAL PROMOTION CASE ---
+                            else {
+                                const nextJobInPath = path[currentJobIndex + 1];
+                                const canPromote = JobSys.getAvailablePromotions() !== null;
+
+                                const reqMonths = nextJobInPath.reqMonths;
+                                const currentMonths = JobSys.monthsInCurrentJob;
+                                const progress = Math.min(100, (currentMonths / reqMonths) * 100);
+
+                                const isEduOk = !nextJobInPath.reqEdu || JobSys.checkEducation(nextJobInPath.reqEdu);
+                                const isTimeOk = currentMonths >= reqMonths;
+
+                                const nextCard = document.createElement('div');
+                                nextCard.className = 'job-promo-card';
+                                nextCard.innerHTML = `
                                 <div class="job-promo-header">
                                     <div class="job-promo-title">
                                         <span>🚀 Siguiente Ascenso: ${nextJobInPath.title}</span>
@@ -7335,29 +7435,73 @@
                                     Solicitar Ascenso
                                 </button>
                             `;
-                            if (canPromote && isEduOk) {
-                                nextCard.querySelector('#btn-promote').onclick = () => {
-                                    const res = JobSys.promote();
-                                    if (res.success) {
-                                        UI.showModal('¡Ascenso Conseguido!', res.message, [{ text: 'Celebrar', style: 'success', fn: () => UI.updateJob(JobSys) }]);
-                                        UI.updateHeader();
-                                        UI.updateDashboard();
-                                    } else {
-                                        alert(res.message);
-                                    }
-                                };
-                            }
-                            dashboardGrid.appendChild(nextCard);
-
+                                if (canPromote && isEduOk) {
+                                    nextCard.querySelector('#btn-promote').onclick = () => {
+                                        const res = JobSys.promote();
+                                        if (res.success) {
+                                            UI.showModal('¡Ascenso Conseguido!', res.message, [{ text: 'Celebrar', style: 'success', fn: () => UI.updateJob(JobSys) }]);
+                                            UI.updateHeader();
+                                            UI.updateDashboard();
+                                        } else {
+                                            alert(res.message);
+                                        }
+                                    };
+                                }
+                                dashboardGrid.appendChild(nextCard);
+                            } // Close normal promotion case
                         } else {
-                            // --- MAX LEVEL CASE (RAISE SYSTEM) ---
-                            const monthsSince = JobSys.monthsSinceLastRaise || 0;
-                            const canRaise = monthsSince >= 12;
-                            const waittime = 12 - monthsSince;
+                            // --- MAX LEVEL CASE OR TRES DEPORTE ---
 
-                            const raiseCard = document.createElement('div');
-                            raiseCard.className = 'job-peak-card';
-                            raiseCard.innerHTML = `
+                            // SPECIAL CASE: TRES DEPORTE
+                            if (GameState.jobTitle === 'TRES DEPORTE') {
+                                const monthsSinceLastRequest = JobSys.monthsSinceLastRaise || 0;
+                                const canAsk = monthsSinceLastRequest >= 2;
+                                const monthsRemaining = Math.max(0, 2 - monthsSinceLastRequest);
+
+                                const goalCard = document.createElement('div');
+                                goalCard.className = 'dashboard-card goal-card';
+                                goalCard.innerHTML = `
+                                <div class="card-header"><span class="badge-warning">PEDIR AUMENTO</span></div>
+                                <h3 class="goal-title">Solicitar Aumento de Salario</h3>
+                                <p style="color:#94a3b8; margin:10px 0;">En TRES DEPORTE no hay ascensos, pero puedes pedir aumento cada 2 meses.</p>
+                                
+                                <div class="progress-section" style="margin-top:15px;">
+                                    <div class="progress-label">
+                                        <span>Tiempo desde última petición</span>
+                                        <span>${monthsSinceLastRequest.toFixed(1)} / 2 meses</span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: ${Math.min(100, (monthsSinceLastRequest / 2) * 100)}%"></div>
+                                    </div>
+                                </div>
+                                
+                                ${!canAsk ? `<p style="color:#f87171; margin-top:15px; font-size:0.9rem;">⏱️ Podrás pedir aumento en ${monthsRemaining.toFixed(1)} mes(es)</p>` : ''}
+                                
+                                <button class="btn-promote" ${!canAsk ? 'disabled' : ''} style="margin-top:15px; width:100%; padding:12px; background:${canAsk ? 'var(--success-color)' : '#334155'}; color:white; border:none; border-radius:8px; font-weight:bold; cursor:${canAsk ? 'pointer' : 'not-allowed'};">
+                                    ${canAsk ? '💰 Pedir Aumento' : '🔒 Aún no disponible'}
+                                </button>
+                            `;
+
+                                const promoteBtn = goalCard.querySelector('.btn-promote');
+                                if (canAsk) {
+                                    promoteBtn.onclick = () => {
+                                        const res = JobSys.promote();
+                                        alert(res.message);
+                                        UI.updateJob(JobSys);
+                                    };
+                                }
+
+                                dashboardGrid.appendChild(goalCard);
+                            }
+                            // NORMAL MAX LEVEL CASE (RAISE SYSTEM)  
+                            else {
+                                const monthsSince = JobSys.monthsSinceLastRaise || 0;
+                                const canRaise = monthsSince >= 12;
+                                const waittime = 12 - monthsSince;
+
+                                const raiseCard = document.createElement('div');
+                                raiseCard.className = 'job-peak-card';
+                                raiseCard.innerHTML = `
                                 <div class="job-peak-content">
                                     <h3>👑 Cima Profesional</h3>
                                     <p style="color:#cbd5e1; font-size:0.95rem;">Has alcanzado el máximo nivel.</p>
@@ -7374,20 +7518,22 @@
                                 </div>
                             `;
 
-                            if (canRaise) {
-                                raiseCard.querySelector('#btn-request-raise').onclick = () => {
-                                    const res = JobSys.requestRaise();
-                                    UI.showModal('Respuesta del Jefe', res.message, [{
-                                        text: 'Continuar', style: 'primary', fn: () => {
-                                            UI.updateJob(JobSys);
-                                            UI.updateHeader();
-                                            UI.updateDashboard();
-                                        }
-                                    }]);
-                                };
-                            }
-                            dashboardGrid.appendChild(raiseCard);
-                        }
+                                if (canRaise) {
+                                    raiseCard.querySelector('#btn-request-raise').onclick = () => {
+                                        const res = JobSys.requestRaise();
+                                        UI.showModal('Respuesta del Jefe', res.message, [{
+                                            text: 'Continuar', style: 'primary', fn: () => {
+                                                UI.updateJob(JobSys);
+                                                UI.updateHeader();
+                                                UI.updateDashboard();
+                                            }
+                                        }]);
+                                    };
+                                }
+                                dashboardGrid.appendChild(raiseCard);
+                            } // Close normal max level else
+                        } // Close MAX LEVEL case
+
                         contentContainer.appendChild(dashboardGrid);
 
                         // 3. Job Market (Grid)
