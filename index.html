@@ -6533,11 +6533,11 @@
                 const steps = [
                     {
                         title: '👋 Bienvenido/a',
-                        msg: `Hola <strong>${GameState.playerName}</strong>. Tu objetivo es la libertad financiera.<br><br>Empiezas con 500€.`
+                        msg: `Hola <strong>${GameState.playerName}</strong>.<br><br>Este es un juego de <strong>simulación real</strong> donde comienzas con 16 años recién acabada la ESO.<br><br>Tus decisiones marcarán tu vida. Tu objetivo es darle la <strong>mejor vida posible</strong> a tu personaje.`
                     },
                     {
-                        title: '💰 Primer Paso',
-                        msg: 'Arriba a la derecha ves tu Dinero. No lo gastes todo.<br><br>Ve a la pestaña <strong>FORMACIÓN</strong> para empezar tu carrera.'
+                        title: '🎓 Primer Paso: Formación',
+                        msg: 'Ve a la pestaña <strong>FORMACIÓN</strong> para elegir tu camino educativo.<br><br>Es momento de decidir tu futuro.'
                     }
                 ];
                 UI.runTutorialSequence(steps, () => {
@@ -6556,14 +6556,15 @@
                 let steps = [];
                 if (view === 'education') {
                     steps = [
-                        { title: '🎓 Formación', msg: 'Aquí inviertes en ti mismo. Los cursos duran tiempo y cuestan dinero, pero te permiten acceder a mejores trabajos.' },
-                        { title: '💡 Consejo', msg: 'Matricúlate en algo que puedas pagar. Cuando termines, ve a la pestaña <strong>TRABAJO</strong> para pedir un ascenso.' }
+                        { title: '🎓 Formación', msg: 'Acabas de terminar la ESO. Es hora de decidir:<br><br>¿<strong>FP</strong> o <strong>BACHILLERATO</strong>?' },
+                        { title: '💼 Siguiente Paso', msg: 'Una vez elijas tu camino, ve a la pestaña <strong>EMPLEO</strong> para buscar trabajo.' }
                     ];
                 } else if (view === 'job') {
                     if (GameState.jobTitle === 'Desempleado' || GameState.salary === 0) {
                         steps = [
-                            { title: '⚠️ Desempleado', msg: 'No tienes ingresos pero tus gastos siguen corriendo. ¡Busca un trabajo urgentemente!' },
-                            { title: '💼 Primeros Pasos', msg: 'Revisa las ofertas disponibles abajo y solicita un puesto para empezar a ganar dinero.' }
+                            { title: '💼 Empleo', msg: 'Sin titulación las opciones son <strong>pocas</strong>.<br><br>Pero necesitas ingresos para pagar tus estudios.' },
+                            { title: '⚡ Trabajos Temporales', msg: 'Mientras estudias, trabaja en <strong>TRABAJOS TEMPORALES</strong>.<br><br>Son flexibles y te darán el dinero necesario para vivir.' },
+                            { title: '⏭️ Siguiente Mes', msg: 'Una vez elijas un trabajo temporal, dale al botón <strong>SIGUIENTE MES</strong> (arriba a la derecha).<br><br>El juego funciona por turnos mensuales.' }
                         ];
                     } else {
                         steps = [
