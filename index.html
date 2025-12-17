@@ -3649,11 +3649,14 @@
             stocks: [
                 { symbol: 'SP500', name: 'S&P 500', price: 4500.00, trend: 0.00, history: [], volatility: 0.08, type: 'index' },
                 { symbol: 'NDX', name: 'Nasdaq 100', price: 15500.00, trend: 0.00, history: [], volatility: 0.12, type: 'index' },
-                { symbol: 'IBEX', name: 'Ibex 35 ETF', price: 85.50, trend: 0.05, history: [], volatility: 0.15, earnings: 5.2 },
-                { symbol: 'TSLA', name: 'Tesla Inc.', price: 230.10, trend: -0.02, history: [], volatility: 0.35, earnings: 12.5 },
-                { symbol: 'REP', name: 'Repsol', price: 14.20, trend: 0.01, history: [], volatility: 0.10, earnings: 2.1 },
-                { symbol: 'AAPL', name: 'Apple', price: 175.00, trend: 0.03, history: [], volatility: 0.12, earnings: 8.4 },
-                { symbol: 'SAN', name: 'Banco Santander', price: 3.50, trend: 0.00, history: [], volatility: 0.18, earnings: 0.45 }
+                { symbol: 'TEL', name: 'Telefónica', price: 4.00, trend: 0.00, history: [], volatility: 0.10, earnings: 0.35 },
+                { symbol: 'SAN', name: 'Santander', price: 3.50, trend: 0.00, history: [], volatility: 0.08, earnings: 0.30 },
+                { symbol: 'IBE', name: 'Iberdrola', price: 11.00, trend: 0.00, history: [], volatility: 0.06, earnings: 0.95 },
+                { symbol: 'ITX', name: 'Inditex', price: 30.00, trend: 0.00, history: [], volatility: 0.12, earnings: 2.80 },
+                { symbol: 'REP', name: 'Repsol', price: 14.00, trend: 0.00, history: [], volatility: 0.15, earnings: 1.40 },
+                { symbol: 'HOME', name: 'Home Asia', price: 50.00, trend: 0.00, history: [], volatility: 0.14, earnings: 4.20 },
+                { symbol: 'RISU', name: 'La Risu', price: 20.00, trend: 0.00, history: [], volatility: 0.18, earnings: 1.75 },
+                { symbol: 'VRDS', name: 'Los Verdes', price: 12.00, trend: 0.00, history: [], volatility: 0.11, earnings: 1.10 }
             ],
 
             init() {
@@ -3671,28 +3674,72 @@
                 return this.stocks.find(s => s.symbol === symbol);
             },
 
+            assignAnnualTargets() {
+                // Get only non-index stocks (exclude SP500 and NDX)
+                const regularStocks = this.stocks.filter(s => !s.type || s.type !== 'index');
+
+                // Shuffle companies randomly
+                const shuffled = [...regularStocks].sort(() => Math.random() - 0.5);
+
+                // Assign performance tiers
+                // Tier 1: 2 companies with 60-80% annual return
+                shuffled[0].annualTarget = 0.60 + Math.random() * 0.20;
+                shuffled[1].annualTarget = 0.60 + Math.random() * 0.20;
+
+                // Tier 2: 2 companies with 10-20% annual return
+                shuffled[2].annualTarget = 0.10 + Math.random() * 0.10;
+                shuffled[3].annualTarget = 0.10 + Math.random() * 0.10;
+
+                // Tier 3: 2 companies with -10% to 1% annual return
+                shuffled[4].annualTarget = -0.10 + Math.random() * 0.11;
+                shuffled[5].annualTarget = -0.10 + Math.random() * 0.11;
+
+                // Tier 4: 1 company with -20% to -10% annual return
+                shuffled[6].annualTarget = -0.20 + Math.random() * 0.10;
+
+                // Tier 5: 1 company with -50% to -30% annual return
+                shuffled[7].annualTarget = -0.50 + Math.random() * 0.20;
+
+                // Reset progress tracking for all companies
+                regularStocks.forEach(stock => {
+                    stock.monthsInYear = 0;
+                    stock.yearStartPrice = stock.price;
+                });
+            },
+
             nextTurn() {
                 this.stocks.forEach(stock => {
                     let totalChange = 0;
 
                     if (stock.type === 'index') {
                         // INDEX LOGIC: Mean reversion to +9% annual (~0.72% monthly)
-                        // Simple Random Walk with drift
                         const targetMonthlyReturn = 0.0072; // ~9% APY
-                        // Random fluctuation centered on 0
                         const fluctuation = (Math.random() * stock.volatility) - (stock.volatility / 2);
                         totalChange = targetMonthlyReturn + fluctuation;
                     } else {
-                        // REGULAR STOCK LOGIC
-                        // Volatilidad based on specific stock stat
-                        const changePercent = (Math.random() * (stock.volatility || 0.20)) - (stock.volatility / 2 || 0.10);
-                        const momentum = stock.trend * 0.3;
-                        totalChange = changePercent + momentum;
+                        // REGULAR STOCK LOGIC WITH ANNUAL TARGETS
+                        if (!stock.annualTarget) {
+                            // Initialize if not set (first time)
+                            stock.annualTarget = 0;
+                            stock.monthsInYear = 0;
+                            stock.yearStartPrice = stock.price;
+                        }
 
+                        // Calculate monthly target to reach annual goal
+                        const monthlyTarget = stock.annualTarget / 12;
+
+                        // Add randomness around the monthly target (±30% of volatility)
+                        const randomness = (Math.random() * stock.volatility) - (stock.volatility / 2);
+
+                        totalChange = monthlyTarget + (randomness * 0.3);
+
+                        // Occasional random events (5% chance)
                         if (Math.random() < 0.05) {
-                            const event = Math.random() < 0.5 ? -0.25 : 0.25;
+                            const event = Math.random() < 0.5 ? -0.15 : 0.15;
                             totalChange += event;
                         }
+
+                        stock.monthsInYear++;
                     }
 
                     stock.price = stock.price * (1 + totalChange);
@@ -8478,6 +8525,9 @@
                 GameState.month = 1;
                 GameState.year++;
                 GameState.age++; // Birthday!
+
+                // ASSIGN NEW ANNUAL STOCK TARGETS
+                StockMarket.assignAnnualTargets();
 
                 // RESET ANNUAL INCOME TRACKING
                 if (!GameState.previousYearIncome) {
