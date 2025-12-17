@@ -1340,7 +1340,7 @@
         /* MOBILE OPTIMIZATIONS (WIZARD & DASHBOARD) */
         @media (max-width: 768px) {
 
-            /* Wizard Responsive - ENHANCED */
+            /* Wizard Responsive - SIMPLIFIED FOR BUTTON VISIBILITY */
 
             /* Full-screen modal on mobile */
             #company-wizard-modal .modal-content {
@@ -1348,7 +1348,6 @@
                 flex-direction: column !important;
                 height: 100vh !important;
                 max-width: 100% !important;
-                max-height: 100vh !important;
                 border-radius: 0 !important;
                 margin: 0 !important;
                 width: 100% !important;
@@ -1356,112 +1355,134 @@
                 overflow: hidden;
             }
 
-            /* Header stays compact */
+            /* Header - very compact */
             #company-wizard-modal .modal-content>div:first-child {
-                padding: 15px 15px !important;
+                padding: 10px 12px !important;
                 flex-shrink: 0;
             }
 
             #company-wizard-modal .modal-content>div:first-child h2 {
-                font-size: 1.2rem !important;
+                font-size: 1rem !important;
+                margin: 0 !important;
             }
 
             #company-wizard-modal .modal-content>div:first-child p {
-                font-size: 0.8rem !important;
+                font-size: 0.7rem !important;
+                margin: 3px 0 0 !important;
             }
 
-            /* Main content container - stack vertically */
+            /* Close button smaller */
+            #company-wizard-modal .modal-content>div:first-child .close {
+                font-size: 1.5rem !important;
+                top: 8px !important;
+                right: 12px !important;
+            }
+
+            /* Main container - simple scroll */
             #company-wizard-modal .modal-content>div:nth-child(2) {
                 flex-direction: column !important;
                 flex: 1 !important;
-                min-height: 0 !important;
                 overflow-y: auto !important;
-                display: flex !important;
+                display: block !important;
+                padding: 10px !important;
             }
 
-            /* Content area - reduced padding */
+            /* HIDE sidebar/summary completely on mobile to save space */
+            #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child {
+                display: none !important;
+            }
+
+            /* Content area - takes full width, compact */
             #company-wizard-modal .modal-content>div:nth-child(2)>div:first-child {
-                padding: 15px !important;
-                flex: 1 !important;
-                overflow-y: auto !important;
+                padding: 0 !important;
+                width: 100% !important;
             }
 
-            /* Progress bar */
+            /* Progress bar - minimal */
             .wizard-progress-new {
-                margin-bottom: 20px !important;
+                margin-bottom: 12px !important;
             }
 
-            /* Step titles */
+            /* Step titles - compact */
             .wizard-step h3 {
-                font-size: 1.1rem !important;
-                margin-bottom: 10px !important;
+                font-size: 0.95rem !important;
+                margin-bottom: 8px !important;
             }
 
             .wizard-step p {
-                font-size: 0.85rem !important;
-                margin-bottom: 15px !important;
+                font-size: 0.75rem !important;
+                margin-bottom: 10px !important;
             }
 
-            /* Name input */
+            /* Name input - smaller */
             #wiz-name {
-                padding: 10px !important;
-                font-size: 0.95rem !important;
+                padding: 8px !important;
+                font-size: 0.9rem !important;
+                margin-bottom: 12px !important;
             }
 
-            /* Cards grid - single column with reduced gap */
+            .form-group {
+                margin-bottom: 12px !important;
+            }
+
+            .form-group label {
+                font-size: 0.8rem !important;
+                margin-bottom: 5px !important;
+            }
+
+            /* Cards grid - VERY compact */
             .wiz-cards-grid {
                 grid-template-columns: 1fr !important;
-                gap: 12px !important;
+                gap: 8px !important;
+                margin-bottom: 15px !important;
             }
 
             .loc-grid {
                 grid-template-columns: 1fr !important;
-                gap: 12px !important;
+                gap: 8px !important;
+                margin-bottom: 15px !important;
             }
 
-            /* Business model cards - optimized for mobile */
+            /* Business model cards - MINIMAL padding */
             .biz-model-card,
             .loc-tier-card {
-                padding: 15px !important;
+                padding: 12px !important;
                 margin-bottom: 0 !important;
             }
 
             .biz-icon {
-                font-size: 2rem !important;
-                margin-bottom: 10px !important;
+                font-size: 1.5rem !important;
+                margin-bottom: 6px !important;
+                line-height: 1 !important;
             }
 
             .biz-title {
-                font-size: 1rem !important;
+                font-size: 0.9rem !important;
+                margin-bottom: 3px !important;
+            }
+
+            .biz-tag {
+                font-size: 0.65rem !important;
+                padding: 2px 6px !important;
+                margin-bottom: 6px !important;
             }
 
             .biz-stat-row {
-                font-size: 0.8rem !important;
+                font-size: 0.7rem !important;
+                margin-top: 3px !important;
             }
 
-            /* Summary/Sidebar Panel - FIXED at bottom on mobile */
-            #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child {
+            /* Show mobile navigation buttons ONLY on mobile */
+            #mobile-wiz-buttons {
+                display: flex !important;
+                padding: 12px 0 !important;
                 position: sticky !important;
                 bottom: 0 !important;
-                z-index: 10 !important;
-                border-left: none !important;
-                border-top: 2px solid #334155 !important;
-                padding: 12px 15px !important;
-                order: 2 !important;
-                flex-shrink: 0 !important;
                 background: #0f172a !important;
-                box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5) !important;
-                max-height: 45vh !important;
-                overflow-y: auto !important;
-            }
-
-            /* Content area needs to be scrollable and leave space for sticky footer */
-            #company-wizard-modal .modal-content>div:nth-child(2)>div:first-child {
-                padding: 15px !important;
-                flex: 1 !important;
-                overflow-y: auto !important;
-                max-height: 55vh !important;
-                padding-bottom: 20px !important;
+                margin-top: 15px !important;
+                padding-top: 15px !important;
+                border-top: 2px solid #334155 !important;
+                z-index: 100 !important;
             }
 
             .wiz-summary-panel {
@@ -3001,6 +3022,18 @@
                         <div id="wiz-loc-grid" class="wiz-cards-grid loc-grid">
                             <!-- Injected JS -->
                         </div>
+                    </div>
+
+                    <!-- MOBILE NAVIGATION BUTTONS - Only visible on mobile -->
+                    <div id="mobile-wiz-buttons" style="display: none; margin-top: 20px; gap: 10px;">
+                        <button id="btn-wiz-back-mobile"
+                            style="flex: 1; padding: 16px; background: transparent; border: 1px solid #475569; color: #94a3b8; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; min-height: 54px;">
+                            ← Atrás
+                        </button>
+                        <button id="btn-wiz-next-mobile" class="btn-primary"
+                            style="flex: 2; padding: 16px; background: var(--accent-color); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 1rem; min-height: 54px;">
+                            Siguiente ➡️
+                        </button>
                     </div>
 
                 </div>
@@ -6295,6 +6328,11 @@
                         btnBack.style.display = 'none';
                         btnNext.textContent = 'Siguiente ➡️';
                         btnNext.onclick = goNext;
+
+                        // Mobile buttons
+                        btnBackMobile.style.display = 'none';
+                        btnNextMobile.textContent = 'Siguiente ➡️';
+                        btnNextMobile.onclick = goNext;
                     } else if (step === 2) {
                         step1.style.display = 'none';
                         step2.style.display = 'block';
@@ -6303,6 +6341,11 @@
                         btnBack.style.display = 'block';
                         btnNext.textContent = '🌵 Fundar Empresa';
                         btnNext.onclick = finishWizard;
+
+                        // Mobile buttons      
+                        btnBackMobile.style.display = 'block';
+                        btnNextMobile.textContent = '🌵 Fundar Empresa';
+                        btnNextMobile.onclick = finishWizard;
 
                         // UPDATE DYNAMIC RENT ON CARDS WHEN ENTERING STEP 2
                         if (state.typeId) {
@@ -6325,6 +6368,13 @@
                 };
 
                 btnBack.onclick = () => showStep(1);
+
+                // CONNECT MOBILE BUTTONS TO SAME LOGIC
+                const btnBackMobile = document.getElementById('btn-wiz-back-mobile');
+                const btnNextMobile = document.getElementById('btn-wiz-next-mobile');
+
+                btnBackMobile.onclick = () => showStep(1);
+                btnNextMobile.onclick = goNext; // Will be reassigned in showStep(2)
 
                 const finishWizard = () => {
                     if (!state.locId) return alert('Selecciona una ubicación para tu sede.');
