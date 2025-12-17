@@ -3703,8 +3703,29 @@
             buyStock(symbol, qty) {
                 const stock = this.getStock(symbol);
                 if (!stock) return { success: false, message: 'Acción no encontrada' };
+
                 const cost = stock.price * qty;
-                if (GameState.cash < cost) return { success: false, message: 'Fondos insuficientes' };
+
+                // CALCULATE CURRENT PORTFOLIO VALUE
+                let currentPortfolioValue = 0;
+                GameState.inventory.stocks.forEach(p => {
+                    const s = this.getStock(p.symbol);
+                    if (s) {
+                        currentPortfolioValue += p.quantity * s.price;
+                    }
+                });
+
+                // CHECK 1,000,000€ PORTFOLIO LIMIT
+                const portfolioLimit = 1000000;
+                if (currentPortfolioValue >= portfolioLimit) {
+                    return { success: false, message: `Has alcanzado el límite de cartera (${formatCurrency(portfolioLimit)}). Debes vender acciones antes de comprar más.` };
+                }
+
+                if (currentPortfolioValue + cost > portfolioLimit) {
+                    return { success: false, message: `Esta compra superaría el límite de cartera de ${formatCurrency(portfolioLimit)}. Valor actual: ${formatCurrency(currentPortfolioValue)}.` };
+                }
+
+                if (GameState.cash < cost) return { success: false, message: 'Dinero insuficiente' };
 
                 GameState.cash -= cost;
                 let pItem = GameState.inventory.stocks.find(s => s.symbol === symbol);
@@ -3713,7 +3734,7 @@
                     pItem.quantity += qty;
                     pItem.avgPrice = totalCost / pItem.quantity;
                 } else {
-                    GameState.inventory.stocks.push({ symbol: symbol, quantity: qty, avgPrice: stock.price });
+                    GameState.inventory.stocks.push({ symbol: symbol, name: stock.name, quantity: qty, avgPrice: stock.price });
                 }
                 return { success: true, message: `Compradas ${qty} acciones de ${symbol} por ${formatCurrency(cost)}` };
             },
@@ -5566,39 +5587,40 @@
                             <span style="color:#94a3b8; font-size:0.9rem;">IBEX 35</span>
                         </div>
 
-                        <!-- MARKET HERO -->
-                        <div class="market-hero">
-                            <div>
-                                <div style="font-size:0.8rem; color:#94a3b8; text-transform:uppercase;">Valor Cartera</div>
-                                <div style="font-size:1.5rem; font-weight:bold; color:#fff;">${formatCurrency(portValue)}</div>
+                        <!-- MARKET HERO (Vertical Layout for Mobile) -->
+                        <div class="market-hero" style="display:flex; flex-direction:column; gap:12px; background:#1e293b; border-radius:12px; padding:16px; margin-bottom:20px;">
+                            <div style="border-bottom:1px solid #334155; padding-bottom:12px;">
+                                <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Valor Cartera</div>
+                                <div style="font-size:1.6rem; font-weight:bold; color:#fff;">${formatCurrency(portValue)}</div>
+                            </div>
+                            <div style="border-bottom:1px solid #334155; padding-bottom:12px;">
+                                <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Retorno Total</div>
+                                <div style="font-size:1.6rem; font-weight:bold; color:${returnClass}">${returnDir}${formatCurrency(totalReturn)}</div>
                             </div>
                             <div>
-                                <div style="font-size:0.8rem; color:#94a3b8; text-transform:uppercase;">Retorno Total</div>
-                                <div style="font-size:1.5rem; font-weight:bold; color:${returnClass}">${returnDir}${formatCurrency(totalReturn)}</div>
-                            </div>
-                             <div>
-                                <div style="font-size:0.8rem; color:#94a3b8; text-transform:uppercase;">Rentabilidad</div>
-                                <div style="font-size:1.5rem; font-weight:bold; color:${costBasis > 0 ? (totalReturn / costBasis * 100).toFixed(2) : '0.00'}%</div>
+                                <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">Rentabilidad</div>
+                                <div style="font-size:1.6rem; font-weight:bold; color:${returnClass}">${costBasis > 0 ? (totalReturn / costBasis * 100).toFixed(2) : '0.00'}%</div>
                             </div>
                         </div>
 
                         <!-- TICKER TAPE / GRID -->
                         <div class="job-section-spacer">
-                            <h3 style="color:#cbd5e1; margin-bottom:15px;">📊 Cotizaciones (Click para Operar)</h3>
-                            <div class="market-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                            <h3 style="color:#cbd5e1; margin-bottom:15px;">📊 Cotizaciones</h3>
+                            <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:10px;">Toca para operar</p>
+                            <div class="market-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
                                 ${stocks.map(stock => {
                     const trendClass = stock.trend >= 0 ? 'rising' : 'falling';
                     const trendColor = stock.trend >= 0 ? '#4ade80' : '#f87171';
                     const sign = stock.trend >= 0 ? '+' : '';
                     return `
-                                    <div class="stock-chip ${trendClass}" data-symbol="${stock.symbol}">
+                                    <div class="stock-chip ${trendClass}" data-symbol="${stock.symbol}" style="background:#1e293b; border-radius:8px; padding:10px; cursor:pointer; transition:all 0.2s; border:1px solid #334155;">
                                         <div>
-                                            <div style="font-weight:bold; font-size:1.1rem;">${stock.symbol}</div>
-                                            <div style="font-size:0.8rem; color:#94a3b8;">${stock.name}</div>
+                                            <div style="font-weight:bold; font-size:1rem; color:white;">${stock.symbol}</div>
+                                            <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${stock.name}</div>
                                         </div>
                                         <div style="text-align:right;">
-                                            <div style="font-weight:bold;">${formatCurrency(stock.price)}</div>
-                                            <div style="font-size:0.8rem; color:${trendColor};">${sign}${(stock.trend * 100).toFixed(2)}%</div>
+                                            <div style="font-weight:bold; font-size:1.05rem; color:white;">${formatCurrency(stock.price)}</div>
+                                            <div style="font-size:0.8rem; color:${trendColor}; font-weight:600;">${sign}${(stock.trend * 100).toFixed(2)}%</div>
                                         </div>
                                     </div>
                                     `;
@@ -5606,39 +5628,49 @@
                             </div>
                         </div>
 
-                        <!-- POSITIONS TABLE -->
+                        <!-- POSITIONS CARDS (RESPONSIVE) -->
                          <div class="dashboard-card">
                             <h3 style="margin-top:0; color:#cbd5e1; margin-bottom:15px; border-bottom:1px solid #334155; padding-bottom:10px;">💼 Mis Posiciones</h3>
                             ${portfolio.length === 0 ? '<p style="color:#64748b;">No hay posiciones abiertas.</p>' :
-                        `<table style="width:100%; text-align:left; font-size:0.9rem; border-collapse:collapse;">
-                            <tr style="color:#94a3b8; border-bottom:1px solid #334155;">
-                                <th style="padding:10px 0;">Ticker</th>
-                                <th>Cant.</th>
-                                <th>Media</th>
-                                <th>Valor</th>
-                                <th style="text-align:right;">P&L</th>
-                                <th style="text-align:right;">Acción</th>
-                            </tr>
+                        `<div style="display:flex; flex-direction:column; gap:10px;">
                             ${portfolio.map(p => {
                             const s = StockMarket.getStock(p.symbol);
                             if (!s) return '';
                             const val = p.quantity * s.price;
                             const pl = val - (p.quantity * p.avgPrice);
                             const plColor = pl >= 0 ? '#4ade80' : '#f87171';
+                            const plSign = pl >= 0 ? '+' : '';
                             return `
-                                    <tr style="border-bottom:1px solid #1e293b;">
-                                        <td style="padding:10px 0; font-weight:bold;">${p.symbol}</td>
-                                        <td>${p.quantity}</td>
-                                        <td>${formatCurrency(p.avgPrice)}</td>
-                                        <td>${formatCurrency(val)}</td>
-                                        <td style="text-align:right; color:${plColor}; font-weight:bold;">${pl >= 0 ? '+' : ''}${formatCurrency(pl)}</td>
-                                         <td style="text-align:right;">
-                                            <button onclick="UI.openStockModal(StockMarket.getStock('${p.symbol}'))" style="background:#dc2626; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; font-size:0.7rem;">VENDER</button>
-                                        </td>
-                                    </tr>
-                                    `;
+                                <div style="background:#1e293b; border-radius:8px; padding:12px; border-left:3px solid ${plColor};">
+                                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+                                        <div>
+                                            <div style="font-weight:bold; font-size:1.1rem; color:white;">${p.symbol}</div>
+                                            <div style="font-size:0.8rem; color:#94a3b8;">${s.name}</div>
+                                        </div>
+                                        <button onclick="UI.openStockModal(StockMarket.getStock('${p.symbol}'))" style="background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.85rem; font-weight:600;">VENDER</button>
+                                    </div>
+                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.85rem;">
+                                        <div>
+                                            <div style="color:#94a3b8; font-size:0.75rem;">Cantidad</div>
+                                            <div style="color:white; font-weight:600;">${p.quantity}</div>
+                                        </div>
+                                        <div>
+                                            <div style="color:#94a3b8; font-size:0.75rem;">Precio Medio</div>
+                                            <div style="color:white; font-weight:600;">${formatCurrency(p.avgPrice)}</div>
+                                        </div>
+                                        <div>
+                                            <div style="color:#94a3b8; font-size:0.75rem;">Valor Actual</div>
+                                            <div style="color:white; font-weight:600;">${formatCurrency(val)}</div>
+                                        </div>
+                                        <div>
+                                            <div style="color:#94a3b8; font-size:0.75rem;">Ganancia/Pérdida</div>
+                                            <div style="color:${plColor}; font-weight:bold;">${plSign}${formatCurrency(pl)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                `;
                         }).join('')}
-                        </table>`
+                        </div>`
                     }
                         </div>
                     </div>
@@ -8330,9 +8362,9 @@
                 GameState.taxWarningShown = true;
                 setTimeout(() => {
                     UI.showModal(
-                        '📋 Impuestos',
-                        `<strong>Simulador real</strong> = Pagar impuestos al Estado de Sergio.<br><br>Cada <strong>mes 5</strong> pagarás la Declaración de la Renta.<br><br><strong>Tramos:</strong><br>• \u003c10k: 10%<br>• 10-25k: 15%<br>• 25-50k: 25%<br>• 50-100k: 35%<br>• 100k+: 45%<br><br>💡 Reserva dinero.`,
-                        [{ text: 'Entendido 😰', style: 'primary', fn: null }]
+                        '📋 Aviso Importante: Impuestos',
+                        `Esto es un <strong>simulador real</strong>... toca pagar impuestos al Estado de Sergio.<br><br>Se le informa que a partir de ahora el <strong>mes 5 de cada año</strong> deberá presentar la <strong>Declaración de la Renta</strong> y pagar impuestos, por lo que deberá <strong>reservar dinero en el banco</strong> para ello.<br><br><strong>Tramos impositivos progresivos:</strong><br>• Menos de 10.000€: 10%<br>• De 10.000€ a 25.000€: 15%<br>• De 25.000€ a 50.000€: 25%<br>• De 50.000€ a 100.000€: 35%<br>• Más de 100.000€: 45%`,
+                        [{ text: 'Entendido', style: 'primary', fn: null }]
                     );
                 }, 800);
             }
@@ -8367,7 +8399,7 @@
                     setTimeout(() => {
                         const breakdown = `
                             <div style="text-align: left; margin: 10px 0;">
-                                <h4 style="margin-bottom: 10px; color: #38bdf8; font-size: 1rem;">Ingresos ${GameState.year - 1}:</h4>
+                                <h4 style="margin-bottom: 10px; color: #38bdf8; font-size: 1rem;">Ingresos Año ${GameState.year - 1}:</h4>
                                 <div style="margin-bottom: 5px; font-size: 0.9rem;">💼 Salarios: <strong>${formatCurrency(GameState.previousYearIncome.salary)}</strong></div>
                                 <div style="margin-bottom: 5px; font-size: 0.9rem;">🏠 Alquileres: <strong>${formatCurrency(GameState.previousYearIncome.rental)}</strong></div>
                                 <div style="margin-bottom: 5px; font-size: 0.9rem;">📈 Bolsa: <strong>${formatCurrency(GameState.previousYearIncome.stocks)}</strong></div>
@@ -8380,8 +8412,8 @@
                         `;
 
                         UI.showModal(
-                            '📋 Renta ' + (GameState.year - 1),
-                            breakdown + '<br><span style="font-size: 0.9rem;">Deducido de tu cuenta.</span>',
+                            'Renta Año ' + (GameState.year - 1),
+                            breakdown,
                             [{ text: 'Pagar 💸', style: 'danger', fn: null }]
                         );
                     }, 1000);
