@@ -1340,39 +1340,187 @@
         /* MOBILE OPTIMIZATIONS (WIZARD & DASHBOARD) */
         @media (max-width: 768px) {
 
-            /* Wizard Responsive */
+            /* Wizard Responsive - ENHANCED */
+
+            /* Full-screen modal on mobile */
             #company-wizard-modal .modal-content {
                 display: flex !important;
                 flex-direction: column !important;
-                height: 100% !important;
+                height: 100vh !important;
                 max-width: 100% !important;
+                max-height: 100vh !important;
                 border-radius: 0 !important;
                 margin: 0 !important;
                 width: 100% !important;
-                padding: 10px !important;
+                padding: 0 !important;
+                overflow: hidden;
             }
 
+            /* Header stays compact */
+            #company-wizard-modal .modal-content>div:first-child {
+                padding: 15px 15px !important;
+                flex-shrink: 0;
+            }
+
+            #company-wizard-modal .modal-content>div:first-child h2 {
+                font-size: 1.2rem !important;
+            }
+
+            #company-wizard-modal .modal-content>div:first-child p {
+                font-size: 0.8rem !important;
+            }
+
+            /* Main content container - stack vertically */
             #company-wizard-modal .modal-content>div:nth-child(2) {
                 flex-direction: column !important;
-                /* Stack Content & Sidebar */
+                flex: 1 !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                display: flex !important;
+            }
+
+            /* Content area - reduced padding */
+            #company-wizard-modal .modal-content>div:nth-child(2)>div:first-child {
+                padding: 15px !important;
+                flex: 1 !important;
+                overflow-y: auto !important;
+            }
+
+            /* Progress bar */
+            .wizard-progress-new {
+                margin-bottom: 20px !important;
+            }
+
+            /* Step titles */
+            .wizard-step h3 {
+                font-size: 1.1rem !important;
+                margin-bottom: 10px !important;
+            }
+
+            .wizard-step p {
+                font-size: 0.85rem !important;
+                margin-bottom: 15px !important;
+            }
+
+            /* Name input */
+            #wiz-name {
+                padding: 10px !important;
+                font-size: 0.95rem !important;
+            }
+
+            /* Cards grid - single column with reduced gap */
+            .wiz-cards-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+
+            .loc-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+
+            /* Business model cards - optimized for mobile */
+            .biz-model-card,
+            .loc-tier-card {
+                padding: 15px !important;
+                margin-bottom: 0 !important;
+            }
+
+            .biz-icon {
+                font-size: 2rem !important;
+                margin-bottom: 10px !important;
+            }
+
+            .biz-title {
+                font-size: 1rem !important;
+            }
+
+            .biz-stat-row {
+                font-size: 0.8rem !important;
+            }
+
+            /* Summary/Sidebar Panel - move to bottom */
+            #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child {
+                border-left: none !important;
+                border-top: 2px solid #334155 !important;
+                padding: 15px !important;
+                order: 2 !important;
+                flex-shrink: 0 !important;
+                background: #0f172a !important;
             }
 
             .wiz-summary-panel {
                 border-left: none !important;
                 border-top: 1px solid #334155;
-                padding: 20px !important;
+                padding: 15px !important;
                 order: 2;
-                /* Move to bottom */
-                position: relative;
             }
 
-            .wiz-cards-grid {
-                grid-template-columns: 1fr !important;
-                /* Single column cards */
+            /* Summary heading */
+            #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child h4 {
+                font-size: 0.9rem !important;
+                margin-bottom: 15px !important;
             }
 
-            .loc-grid {
-                grid-template-columns: 1fr !important;
+            /* Summary values - more compact */
+            #wiz-current-cash {
+                font-size: 1.2rem !important;
+            }
+
+            .cost-breakdown {
+                padding: 12px !important;
+                font-size: 0.85rem !important;
+            }
+
+            #wiz-error-msg {
+                font-size: 0.75rem !important;
+                margin-top: 10px !important;
+            }
+
+            /* Navigation buttons - larger touch targets */
+            #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child>div:last-child {
+                margin-top: 15px !important;
+                gap: 8px !important;
+            }
+
+            #btn-wiz-back,
+            #btn-wiz-next {
+                padding: 14px 12px !important;
+                font-size: 0.95rem !important;
+                min-height: 48px !important;
+            }
+
+            /* Step 2 - Location Cards Specific Optimizations */
+            .loc-tier-card {
+                padding: 15px !important;
+            }
+
+            /* Traffic visualization - more prominent on mobile */
+            .traffic-viz {
+                height: 8px !important;
+                margin: 8px 0 !important;
+            }
+
+            .traffic-fill {
+                border-radius: 4px;
+            }
+
+            /* Location price tags - ensure visibility */
+            .loc-price-tag {
+                font-size: 0.85rem !important;
+                font-weight: bold !important;
+            }
+
+            /* Location descriptions - compact */
+            .loc-tier-card div[style*="line-height"] {
+                font-size: 0.75rem !important;
+                line-height: 1.3 !important;
+            }
+
+            /* Location icon */
+            .loc-tier-card div[style*="font-size:1.8rem"] {
+                font-size: 1.5rem !important;
+                margin-bottom: 8px !important;
             }
 
             /* Dashboard Responsive */
