@@ -1439,14 +1439,29 @@
                 font-size: 0.8rem !important;
             }
 
-            /* Summary/Sidebar Panel - move to bottom */
+            /* Summary/Sidebar Panel - FIXED at bottom on mobile */
             #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child {
+                position: sticky !important;
+                bottom: 0 !important;
+                z-index: 10 !important;
                 border-left: none !important;
                 border-top: 2px solid #334155 !important;
-                padding: 15px !important;
+                padding: 12px 15px !important;
                 order: 2 !important;
                 flex-shrink: 0 !important;
                 background: #0f172a !important;
+                box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5) !important;
+                max-height: 45vh !important;
+                overflow-y: auto !important;
+            }
+
+            /* Content area needs to be scrollable and leave space for sticky footer */
+            #company-wizard-modal .modal-content>div:nth-child(2)>div:first-child {
+                padding: 15px !important;
+                flex: 1 !important;
+                overflow-y: auto !important;
+                max-height: 55vh !important;
+                padding-bottom: 20px !important;
             }
 
             .wiz-summary-panel {
@@ -1458,36 +1473,54 @@
 
             /* Summary heading */
             #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child h4 {
-                font-size: 0.9rem !important;
-                margin-bottom: 15px !important;
+                font-size: 0.85rem !important;
+                margin-bottom: 10px !important;
+                margin-top: 0 !important;
             }
 
             /* Summary values - more compact */
             #wiz-current-cash {
-                font-size: 1.2rem !important;
+                font-size: 1.1rem !important;
+            }
+
+            /* Summary item spacing */
+            .summary-item {
+                margin-bottom: 10px !important;
+            }
+
+            .summary-item span {
+                font-size: 0.7rem !important;
+                margin-bottom: 3px !important;
             }
 
             .cost-breakdown {
-                padding: 12px !important;
-                font-size: 0.85rem !important;
+                padding: 10px !important;
+                font-size: 0.8rem !important;
+                margin-bottom: 10px !important;
+            }
+
+            .cost-breakdown>div {
+                margin-bottom: 8px !important;
             }
 
             #wiz-error-msg {
-                font-size: 0.75rem !important;
-                margin-top: 10px !important;
+                font-size: 0.7rem !important;
+                margin-top: 8px !important;
+                padding: 8px !important;
             }
 
-            /* Navigation buttons - larger touch targets */
+            /* Navigation buttons - larger touch targets and reduced top margin */
             #company-wizard-modal .modal-content>div:nth-child(2)>div:last-child>div:last-child {
-                margin-top: 15px !important;
+                margin-top: 10px !important;
                 gap: 8px !important;
             }
 
             #btn-wiz-back,
             #btn-wiz-next {
-                padding: 14px 12px !important;
-                font-size: 0.95rem !important;
-                min-height: 48px !important;
+                padding: 16px 12px !important;
+                font-size: 1rem !important;
+                min-height: 50px !important;
+                font-weight: bold !important;
             }
 
             /* Step 2 - Location Cards Specific Optimizations */
