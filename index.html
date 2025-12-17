@@ -6016,6 +6016,9 @@
                             const pl = val - (p.quantity * p.avgPrice);
                             const plColor = pl >= 0 ? '#4ade80' : '#f87171';
                             const plSign = pl >= 0 ? '+' : '';
+                            // Calculate percentage
+                            const invested = p.quantity * p.avgPrice;
+                            const plPercent = invested > 0 ? ((pl / invested) * 100).toFixed(2) : 0;
                             return `
                                 <div style="background:#1e293b; border-radius:8px; padding:12px; border-left:3px solid ${plColor};">
                                     <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
@@ -6040,7 +6043,7 @@
                                         </div>
                                         <div>
                                             <div style="color:#94a3b8; font-size:0.75rem;">Ganancia/Pérdida</div>
-                                            <div style="color:${plColor}; font-weight:bold;">${plSign}${formatCurrency(pl)}</div>
+                                            <div style="color:${plColor}; font-weight:bold;">${plSign}${formatCurrency(pl)} <span style="font-size:0.9rem;">(${plSign}${plPercent}%)</span></div>
                                         </div>
                                     </div>
                                 </div>
